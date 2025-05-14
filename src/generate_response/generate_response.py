@@ -277,37 +277,173 @@ def generate_national_standard_paragraph():
     Generate the national standard paragraph based on the form data.
     """
 
-    nsp_text = '\n\n**__Environment Agency position__**\n'
+    nsp_text = '\n\n# **__Environment Agency position__**\n'
 
     response_points_dict = check_selected_nsp_response_points_checkboxes()
 
     overarching_response_type = st.session_state.get('nsp_overarching_response_type', '')
 
     if overarching_response_type == "No Objection - Condition":
+        nsp_text += '**No Objection - Condition**\n'
         sub_type = st.session_state.get('nsp_sub_type_no_objection_condition', '')
         nsp_text += f'{sub_type}\n'
 
     elif overarching_response_type == "No Objection - No Condition":
+        nsp_text += '**No Objection - No Condition**\n'
         sub_type = st.session_state.get('nsp_sub_type_no_objection_no_condition', '')
         nsp_text += f'{sub_type}\n'
 
     elif overarching_response_type == "Objection - In Detail":
         sub_type = st.session_state.get('nsp_sub_type_objection_in_detail', '')
-        nsp_text += f'{sub_type}\n'
+       
+        if sub_type == "Inadequate FRA Submitted":
+            nsp_text +=  "**Environment Agency position**\n\n"
+            nsp_text +=  "In the absence of an acceptable Flood Risk Assessment (FRA) we object to this application and recommend that planning permission is refused. \n\n"
+            nsp_text +=  "**Reason(s)**\n\n"
+            nsp_text +=  "The submitted FRA does not comply with the requirements for site-specific flood risk assessments, as set out in paragraphs 30 to 32 of the Flood Risk and Coastal Change section of the planning practice guidance. The FRA does not therefore adequately assess the development's flood risks. In particular, the FRA fails to:\n\n"
+            
+            for key, value in response_points_dict.items():
+                if value:
+                    nsp_text += sub_response_points_text(key)
 
     elif overarching_response_type == "Objection - In Principle":
+        nsp_text += '**Objection - In Principle**\n'
         sub_type = st.session_state.get('nsp_sub_type_objection_in_principle', '')
         nsp_text += f'{sub_type}\n'
     
-    for key, value in response_points_dict.items():
-        if value:
-            nsp_text += f'{key}\n'
-
-
 
 
 
     return nsp_text
+
+
+
+def sub_response_points_text(key):
+    """
+    Returns the appropriate text response based on the checkbox key.
+    
+    Args:
+        key: The key of the checkbox from session state
+        
+    Returns:
+        str: The text to include in the response for this specific issue
+    """
+    
+    if key == 'nsp_condition_inadequate_fra_submitted_flood_zone_not_defined':
+        return "- Set out the flood zone that the proposal lies within.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_development_incompatible_with_the_flood_zone':
+        flood_zone = st.session_state.get('flood_zone', '')
+        proposed_vulnerability_classification = st.session_state.get('proposed_vulnerability_classification', '')
+        
+        if len(flood_zone) == 0:
+            return "- SET YOUR FLOOD ZONE. \n"
+        elif len(flood_zone) == 1:
+            flood_zone_text = flood_zone[0]
+        elif len(flood_zone) == 2:
+            flood_zone_text = f"{flood_zone[0]} and {flood_zone[1]}"
+        else:
+            flood_zone_text = f"{', '.join(flood_zone[:-1])}, and {flood_zone[-1]}"
+            
+        sub_response_text = f"- Set devlopment in a flood zone compatible with the vulnerability classification. "
+        sub_response_text += f"The development is in the flood zone{'' if len(flood_zone) == 1 else 's'} {flood_zone_text} and the vulnerability classification is {proposed_vulnerability_classification}.\n"
+        return sub_response_text
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_acceptable_model_not_used':
+        model_status = st.session_state.get('model_status', '')
+        return f"- Use an acceptable model to assess flood risk. The models review status is: {model_status}.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_incorrect_climate_change_allowance_used':
+        climate_change_allowance = st.session_state.get('climate_change_allowance', '')
+        correct_climate_change_allowance_value = st.session_state.get('correct_climate_change_allowance_value', '')
+
+        if climate_change_allowance == 0:
+            sub_response_text = f"- Use the correct climate change allowance. The submission has not applied any climate change allowance. "
+        else:
+            sub_response_text = f"- Use the correct climate change allowance. The submission has applied a climate change allowance of {climate_change_allowance}%. "
+        
+        sub_response_text += f"The correct climate change allowance is {correct_climate_change_allowance_value}%.\n"
+
+        return sub_response_text
+        
+
+    elif key == 'nsp_condition_inadequate_fra_submitted_incorrect_design_flood_level_used_wrong_node_point':
+        return "- Use the correct node point to determine the design flood level. The cloest upstream node point is used to determine the design flood level.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_incorrect_design_flood_level_used_inappropriate_interpolation':
+        return "- Use appropriate methods to determine the design flood level. Interpolation is not appropriate for this devlopment.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_finished_floor_levels_not_high_enough':
+        how_much_freeboard = st.session_state.get('how_much_freeboard', 0)
+        return f"- Ensure finished floor levels are set sufficiently above the design flood level. The requiredfreeboard is {how_much_freeboard}mm above the design flood level.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_residual_risk_behind_defences_not_assessed':
+        return "- Assess the residual risk behind defences. This includes both breach and overtopping assessments\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_residual_risk_behind_defences_not_adequately_assessed':
+        return "- Adequately assess the residual risk behind defences for both breach and overtopping.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_third_party_impacts_not_assessed':
+        return "- Properly assess the impacts on third parties. There should be no loss of floodplain storage capacity on a level-for-level and volume-for-volume basis.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_floodplain_compensation_not_level_for_level_and_volume_for_volume':
+        return "- Provide floodplain compensation on a level-for-level and volume-for-volume basis. The cumulative storage volume provided is avabile at or before the slice it is needed when assessing in 200mm slices from the lowest level on the site\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_floodplain_compensation_not_volume_for_volume':
+        return "- Provide floodplain compensation on a volume-for-volume basis. The cumulative storage volume provided is avabile at or before the slice it is needed when assessing in 200mm slices from the lowest level on the site\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_third_party_food_risk_mitigation_measures_not_adequate':
+        return "- Provide adequate flood risk mitigation measures for third parties. The measures should demonstrate no detrimental impact to others\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_access_and_egress_routes_not_properly_assessed':
+        return "- Properly assess access and egress routes. Access and egress should be through the lowest risk parts of the site wherever possible\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_inadequate_easement_from_a_watercourse':
+        easement_issue_reason = st.session_state.get('easement_issue_reason', '')
+        easement_resolution = st.session_state.get('easement_resolution', '')
+        return f"- Provide adequate easement from the watercourse. {easement_issue_reason}. To resolve this issue, {easement_resolution}\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_inadequate_easement_from_a_flood_defence':
+        easement_issue_reason = st.session_state.get('easement_issue_reason', '')
+        easement_resolution = st.session_state.get('easement_resolution', '')
+        return f"- Provide adequate easement from the flood defence. {easement_issue_reason}. To resolve this issue, {easement_resolution}\n"
+    
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_contributions_not_agreed':
+
+        total_contributions_required = st.session_state.get('total_contributions_required', '')
+        required_contributions_type = st.session_state.get('required_contributions_type', [])
+        required_contributions_reason = st.session_state.get('required_contributions_reason', '')
+        required_contributions_other = st.session_state.get('required_contributions_other', '')
+
+        contrbuton_text = f"- Agree to the required contributions. The required contributions are £{total_contributions_required}. "
+        contrbuton_text += f"These are required for:\n"
+
+        for i in range(len(required_contributions_type)):
+            contrbuton_text += f"   - {required_contributions_type[i]}\n"
+        
+        if required_contributions_other:
+            contrbuton_text += f"   - {required_contributions_other}\n"
+        
+        contrbuton_text += f"\n The reason for the required contributions is: {required_contributions_reason}\n"
+        return contrbuton_text
+
+
+    elif key == 'nsp_condition_inadequate_fra_submitted_flood_resilient_and_resistant_construction_not_used':
+        return "- Propose suitable flood resilient and resistant construction methods.\n"
+    
+    elif key == 'nsp_condition_inadequate_fra_submitted_flood_resilient_and_resistant_construction_not_adequate':
+        return "- Propose suitable flood resilient and resistant construction methods.\n"
+    
+    # No Objection - No Condition responses
+    elif key == 'nsp_no_objection_no_condition_no_flood_risk':
+        return "- The site is at no risk of flooding.\n"
+    
+    elif key == 'nsp_no_objection_no_condition_very_low_flood_risk':
+        return "The site is at very low risk of flooding.\n"
+    else:
+        return ""
+
 
 
 def check_selected_nsp_response_points_checkboxes():

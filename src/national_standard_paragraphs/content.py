@@ -125,12 +125,6 @@ def objection_in_detail():
             key="nsp_condition_inadequate_fra_submitted_acceptable_model_not_used",
             on_change=update_response
         )
-        
-        st.checkbox(
-            label='An acceptable model has not been used - Failed to pass the review',
-            key="nsp_condition_inadequate_fra_submitted_acceptable_model_not_used_failed_to_pass_the_review",
-            on_change=update_response
-        )
 
         st.checkbox(
             label='Incorrect Climate Change Allowance used',

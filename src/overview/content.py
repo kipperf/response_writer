@@ -110,7 +110,7 @@ def render_overview():
             if flood_model != "New National Modelling":
                 model_status = st.radio(
                     "Model status",
-                    ["Not Reviewed (review not needed)", "Not Reviewed (review needed)", "Reviewed and approved", "Reviewed and rejected", 'Approved EA Model', 'EA Model not suitable to be used for this site'],
+                    ["Not Reviewed (review not needed)", "Not Reviewed (review needed)", "Reviewed and approved", "Reviewed and rejected", 'Approved EA Model', 'EA Model not suitable to be used for this devlopment'],
                     key="model_status",
                     on_change=update_response
                 )
@@ -207,6 +207,15 @@ def render_overview():
             on_change=update_response
         )
 
+        how_much_freeboard = st.number_input(
+            label="How much freeboard is required? (mm)",
+            key="how_much_freeboard",
+            on_change=update_response,
+            min_value=0,
+            max_value=2000,
+            value=600
+        )
+
         if finished_floor_levels_provided:
             # ask for the finished floor levels
             finished_floor_levels = st.number_input(
@@ -230,6 +239,7 @@ def render_overview():
                     key="finished_floor_levels_reason",
                     on_change=update_response
                 )
+
 
                 # if other, ask for the reason
                 if finished_floor_levels_reason == "Other":
