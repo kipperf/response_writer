@@ -5,8 +5,24 @@ def get_formatted_response():
     Get a formatted response based on content from all tabs.
     Returns a markdown formatted string.
     """
-
     response = ''
+
+    ###########
+    # Notes ##
+    ###########
+
+    response += '# **_Notes_**\n\n' 
+
+    notes_input = st.session_state.get('notes_content', '')
+    response += notes_input
+    response += '\n\n'
+
+
+
+    ###########
+    # Overview #
+    ###########
+    response += '# **_Overview_**\n\n'
     
     # Get the content from the FRA and relevant documents section
     fra_submitted = st.session_state.get('fra_submitted', False)
@@ -233,12 +249,88 @@ def get_formatted_response():
     
     response += additional_information_text
 
+
+
+
+    # National Standard Paragraph
+    national_standard_paragraph_text = generate_national_standard_paragraph()
+
+    response += national_standard_paragraph_text
+
+
+
+
+
+
+
     return response
 
 def update_response():
     """Callback function for form changes (for compatibility)"""
     # This is left empty as rerendering happens automatically
     pass
+
+
+
+def generate_national_standard_paragraph():
+    """
+    Generate the national standard paragraph based on the form data.
+    """
+
+    nsp_text = '\n\n**__Environment Agency position__**\n'
+
+    response_points_dict = check_selected_nsp_response_points_checkboxes()
+
+    overarching_response_type = st.session_state.get('nsp_overarching_response_type', '')
+
+    if overarching_response_type == "No Objection - Condition":
+        sub_type = st.session_state.get('nsp_sub_type_no_objection_condition', '')
+        nsp_text += f'{sub_type}\n'
+
+    elif overarching_response_type == "No Objection - No Condition":
+        sub_type = st.session_state.get('nsp_sub_type_no_objection_no_condition', '')
+        nsp_text += f'{sub_type}\n'
+
+    elif overarching_response_type == "Objection - In Detail":
+        sub_type = st.session_state.get('nsp_sub_type_objection_in_detail', '')
+        nsp_text += f'{sub_type}\n'
+
+    elif overarching_response_type == "Objection - In Principle":
+        sub_type = st.session_state.get('nsp_sub_type_objection_in_principle', '')
+        nsp_text += f'{sub_type}\n'
+    
+    for key, value in response_points_dict.items():
+        if value:
+            nsp_text += f'{key}\n'
+
+
+
+
+
+    return nsp_text
+
+
+def check_selected_nsp_response_points_checkboxes():
+    """
+    Returns a dictionary of checkbox keys and their values for the National Standard Paragraphs section.
+    Includes NSP-related checkbox keys with the specified prefixes.
+    """
+    # List of acceptable key prefixes - keep this list up to date when adding new checkbox types
+    acceptable_prefixes = [
+        'nsp_condition_',
+        'nsp_no_objection'
+    ]
+    
+    response_points_dict = {}
+    
+    # Iterate through all session state keys
+    for key in st.session_state:
+        # Check if key starts with any of the acceptable prefixes
+        if any(key.startswith(prefix) for prefix in acceptable_prefixes):
+            response_points_dict[key] = st.session_state.get(key, False)
+    
+    return response_points_dict
+
 
 
 
@@ -249,7 +341,7 @@ def generate_fra_section_text(
         relevant_documents
     ):
 
-    text = 'Flood Risk Assessment (FRA) Details\n\n'
+    text = '**Flood Risk Assessment (FRA) Details**\n\n'
     
     if fra_submitted:
         text += f'An FRA has been submitted and reviewed in support of this application ({fra_details}). '
@@ -273,7 +365,7 @@ def generate_development_details_section_text(
         proposed_vulnerability_classification
     ):
 
-    text = '\n\nDevelopment Details\n\n'
+    text = '\n\n**Development Details**\n\n'
 
     if application_type == 'Outline':
         text += f'The application is an {application_type} application. '
@@ -298,7 +390,7 @@ def generate_flood_zone_section_text(
         model_year,
     ):
 
-    text = '\n\nFlood Zone and Modelling Details\n\n'
+    text = '\n\n**Flood Zone and Modelling Details**\n\n'
 
     if not flood_zone_defined:
         text += f'The submission does not demonstrate which flood zones the site sits within. '
@@ -345,7 +437,7 @@ def generate_climate_change_section_text(
         correct_climate_change_allowance_value
     ):
 
-    text = '\n\nClimate Change Details\n\n'
+    text = '\n\n**Climate Change Details**\n\n'
 
     if climate_change_relevant:
         text += f'The climate change allowance used in the FRA is {climate_change_allowance}%. '
@@ -370,7 +462,7 @@ def generate_finished_floor_levels_section_text(
         finished_floor_levels_reason_other
     ):
 
-    text = '\n\nFinished Floor Levels Details\n\n'
+    text = '\n\n**Finished Floor Levels Details**\n\n'
 
     if finished_floor_levels_relevant:
         text += f'Finished floor levels are relevant to this application. '
@@ -413,7 +505,7 @@ def generate_flood_defences_section_text(
     ):
 
 
-    text = '\n\nFlood Defences Details\n\n'
+    text = '\n\n**Flood Defences Details**\n\n'
 
     if not flood_defences:
         text += f'There are no flood defences relevant to this application. '
@@ -466,7 +558,7 @@ def generate_third_party_flood_risk_assessment_section_text(
         mitigation_other_type
     ):
 
-    text = '\n\nThird Party Flood Risk Assessment Details\n\n'
+    text = '\n\n**Third Party Flood Risk Assessment Details**\n\n'
 
     if development_displaces_flood_water:
         text += f'The development displaces flood water in the design flood event. '
@@ -512,7 +604,7 @@ def generate_design_flood_level_section_text(
         design_flood_level_reason_other
     ):
 
-    text = '\n\nDesign Flood Level Details\n\n'
+    text = '\n\n**Design Flood Level Details**\n\n'
 
     if design_flood_level_calculated:
         text += f'The FRA states that the design flood level is {design_flood_level}. '
@@ -541,7 +633,7 @@ def generate_access_and_egress_section_text(
         access_and_egress_reason
     ):
     
-    text = '\n\nAccess and Egress Details\n\n'
+    text = '\n\n**Access and Egress Details**\n\n'
     
     if access_and_egress_considered:
         text += f'Access and egress has been considered as part of this application. '
@@ -590,7 +682,7 @@ def generate_easement_section_text(
         easement_resolution
     ):
     
-    text = '\n\nEasement Details\n\n'
+    text = '\n\n**Easement Details**\n\n'
     
     if easement_issue == "Yes":
         text += f'There is an issue with the easement for this site. '
@@ -627,7 +719,7 @@ def generate_required_contributions_section_text(
         required_contributions_reason
     ):
     
-    text = '\n\nRequired Contributions\n\n'
+    text = '\n\n**Required Contributions**\n\n'
     
     if required_contributions == "Yes":
         text += f'Financial contributions will be required as part of this development. '
@@ -661,7 +753,7 @@ def generate_flood_resilient_resistant_construction_section_text(
         flood_resilient_and_resistant_construction_reason
     ):
     
-    text = '\n\nFlood Resilient and Resistant Construction\n\n'
+    text = '\n\n**Flood Resilient and Resistant Construction**\n\n'
     
     if flood_resilient_and_resistant_construction == "Yes":
         text += f'The development includes flood resilient and resistant construction measures. '
@@ -693,7 +785,7 @@ def generate_additional_information_section_text(overview_input):
     text = ''
     
     if overview_input and overview_input.strip():
-        text = '\n\nAdditional Information\n\n'
+        text = '\n\n**Additional Information**\n\n'
         text += overview_input
     
     return text
